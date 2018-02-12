@@ -1,4 +1,5 @@
-#Author: Greg Soares
+# Author: Greg Soares
+# Server Class and threading from github.com/Torxed
 #!/usr/bin/env python
 
 
@@ -6,13 +7,14 @@ import time
 import timeit
 import socket
 import threading
+
 #import Queue
-      
-L2I = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ",range(26)))
-I2L = dict(zip(range(26),"ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
 
-key = 7
-
+# {
+#
+# L2I = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ",range(26)))
+# I2L = dict(zip(range(26),"ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+# key = 7
 #class Low_Level_encrypt():
 #    def __init__(self):
 #        return encrypt(self.plaintext)
@@ -99,22 +101,40 @@ key = 7
 #    data = s.recv(1024)
 #    s.close()
 #
+# }
 def Main():
+    auth = "pass"
     host = '127.0.0.1'
     port = 5000
     s = socket.socket()
-    s.bind((host,port))
-    s.listen(1)
+    s.bind((host, port))
+    s.listen(0)
     c, addr = s.accept()
-    print "Connection from: " + str(addr)
-    while True:
-        data = c.recv(1024)
+    print("Incoming connection from: " + str(addr))
+
+    data = c.recv(10)  # Receive max of 10 bytes
+    auth_recv = str(data)
+    auth_recv = auth_recv.decode()
+    print('Checking: ' + auth_recv)
+
+    if (auth_recv == auth):
+        print(auth_recv + ' = greg')
+    while data != ('!@'.encode()):  # Exit code
+        # Make an is_authorized to check for login again or not
+        # ELSE: if is_authorized then just receive message till exit code is given
+        c.send(data)  # ack
+        data = c.recv(1024)  # Receive max of 10 bytes
+        c.send(data)  # ack
+        print ("Message: " + data.decode('ascii'))
         if not data:
             break
-        print "from connected user: " + str(data)
-        data = str(data).upper()
-        print "sending: " + str(data)
-        c.send(data)
+
+
+
     c.close()
+
+
 if __name__ == '__main__':
     Main()
+
+

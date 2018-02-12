@@ -64,12 +64,7 @@ key = 7
 #        
 #
 def Main():
-    host = '172.16.201.109'
-    port = 2041 
-    message = ""
     encoded = ""
-    plaintext = "Twinkle, twinkle, little star\nHow I wonder what you are\nUp above the world so high\nLike a diamond in the sky\nTwinkle, twinkle little star\nHow I wonder what you are"
-    plaintext = plaintext.upper()
     # encoded = encrypt(plaintext)
     #print '\nCiphertext to be Sent:'
     #for eachElement in message: print eachElement
@@ -78,26 +73,46 @@ def Main():
     #print encoded
 
 # Initiating Socket
-    s = socket.socket()
-    s.connect((host, port))
+
 #----Initiate a loop to encode each char in string and send it    
     #message = raw_input("-> ")
 
-    i = 0
-    #while i != len(encoded):
+    # i = 0
+    # while i != len(encoded):
     #    message = encoded[i]
     #    #print('Sending NOW: %s'%(message))
     #    s.send('%s'%(message))
     #    #data = s.recv(1024)
     #    #print 'Received from server: ' + str(data)
-    ##ser.write('\nTransmitted Ciphertext Message: \n%s'%(encoded))
+    # ser.write('\nTransmitted Ciphertext Message: \n%s'%(encoded))
     #    i = i + 1
     #    time.sleep(.1)
+
+    host = '127.0.0.1'
+    port = 5000
+    login = input("Login: ")
+    message = input("Message: ")
+    s = socket.socket()
+    s.connect((host, port))
     print("Sending Message")
-    messa = 'asd'
-    s.send('a')
-    data = s.recv(1024)
+    s.send((login.encode()))
+    data = s.recv(10)
+    if(data == (login.encode())):
+        s.send((message.encode()))
+        keep_alive = True
+        data = s.recv(1024)
+        if(data == ( message.encode())):
+            while keep_alive:
+                new_message = input("Send: ")
+                s.send(new_message)
+                data = s.recv(1024)
+                if (data != new_message):
+                    print('\t\t-- Message error -- \n Sent: {} \n Received: {} '.format((str(new_message)), (str(data))))
+                    keep_alive = False
+                else:
+                    pass
     s.close()
+
 
 if __name__ == '__main__':
     Main()
