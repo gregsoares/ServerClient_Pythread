@@ -32,7 +32,7 @@ def Main():
             c.send(data)  # ack
             data = c.recv(1024)  # Receive max of 10 bytes
             c.send(data)  # ack
-            print("Message: " + data.decode('ascii'))
+            print("Message: " + data.decode())
             if not data:
                 break
     else:
