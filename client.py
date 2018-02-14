@@ -6,12 +6,22 @@ import time
 import timeit
 import threading
 
+
+def clientHandler():
+    conn, addr = s.accept()
+    print(addr, "is Connected")
+
+    while 1:
+        data = conn.recv(1024)
+        if not data:
+            break
+        print("Received Message", repr(data))
+
+
 def Main():
     exit_code = '!@'
     host = '127.0.0.1'
     port = 5000
-    s = socket.socket()
-    s.connect((host, port))
 
     # Initiating connection
     login = input("Login: ")
