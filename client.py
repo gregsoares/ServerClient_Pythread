@@ -7,16 +7,15 @@ import timeit
 import threading
 
 
-def clientHandler():
-    conn, addr = s.accept()
-    print(addr, "is Connected")
-
-    while 1:
-        data = conn.recv(1024)
-        if not data:
-            break
-        print("Received Message", repr(data))
-
+#def clientHandler():
+#    conn, addr = s.accept()
+#    print(addr, "is Connected")
+#
+#    while 1:
+#        data = conn.recv(1024)
+#        if not data:
+#            break
+#        print("Received Message", repr(data))
 
 def Main():
     exit_code = '!@'
@@ -29,7 +28,7 @@ def Main():
     message = input("Message: ")
     login = (login.encode())
 
-    print("Sending Message")
+    print("Sending Login")
     s.send(login)
     data = s.recv(10)
     auth_recv = (str(data))
