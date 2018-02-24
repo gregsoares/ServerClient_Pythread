@@ -59,6 +59,7 @@ import threading
 #            break
 #        print("Received Message", repr(data))
 def Main():
+    TIMEOUT = 10
     auth = 'pass'
     host = '127.0.0.1'
     port = 5000
@@ -66,33 +67,42 @@ def Main():
     exit_code = exit_code.encode()
     s = socket.socket()
     s.bind((host, port))
-    s.listen(0)
-    c, addr = s.accept()
-    print("Incoming connection from: " + str(addr))
-
-    data = c.recv(10)  # Receive max of 10 bytes
-    auth_recv = str((data.decode()))
-    # auth_recv = auth_recv.decode()
-    print('Checking: ' + auth_recv)
-    # Debugging of auth and auth_recv variable types and equivalence
-    # print(auth + ' is of type ' + str(type(auth)))
-    # print(auth_recv + ' is of type ' + str(type(auth_recv)))
-
-    if ((str(auth_recv)) == (str(auth))):
-        print(auth_recv + ' successfully authenticated')
-        print('Exit Code: ' + (str(exit_code)))
-        while data != exit_code:  # Exit code
-            # Make an is_authorized to check for login again or not
-            # ELSE: if is_authorized then just receive message till exit code is given
-            c.send(data)  # ack
-            data = c.recv(1024)  # Receive max of 10 bytes
-            c.send(data)  # ack
-            print("Message: " + data.decode())
-            if not data:
-                break
-    else:
-        print(auth_recv + ' did not authenticate successfully')
-
+    s.listen(1)
+    authorized = False
+    while 1:
+        c, addr = s.accept()
+        c.settimeout(TIMEOUT)
+        while 1:
+            try:
+                print("Incoming connection from: " + str(addr))
+                data = c.recv(10)  # Receive max of 10 bytes
+                auth_recv = str((data.decode()))
+                print('Checking: ' + auth_recv)
+		
+                if ((str(auth_recv)) == (str(auth))):
+                    print(auth_recv + ' successfully authenticated')
+                    authorized = True
+                    print('Exit Code: ' + (str(exit_code)))
+                else:
+                    c.recv(10)
+            except socket.timeout:
+                    if authorized is False:
+                        print ('Connection lost. Listening for a new controller.')
+                        break
+                    else:
+                        #var to check for authentication
+                        #if not then drop connection
+				# if authenticated keep on going
+                        while data != exit_code:  # Exit code
+ 
+                            c.send(data)  # ack
+                            data = c.recv(1024)  # Receive max of 10 bytes
+                            c.send(data)  # ack
+                            print("Message: " + data.decode())
+                            if not data:
+                                break
+                            
+			
     c.close()
 
 
