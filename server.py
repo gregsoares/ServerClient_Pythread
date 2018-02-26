@@ -3,111 +3,91 @@
 
 
 import socket
-import threading
+from threading import Thread
 
-# object --> maybe change to a thread type obj
-#class ThreadedServer(object):
-#    def __init__(self, host, port):  # host/port = actual parameters at creation time
-#        self.host = host
-#        self.port = port
-#        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-#        self.sock.bind((self.host, self.port))
-#
-#    def listen(self):
-#        self.sock.listen(5)
-#        while True:
-#            client, address = self.sock.accept()
-#            client.settimeout(60)
-#            threading.Thread(target = self.listenToClient,args = (client,address)).start()
-#
-#    def listenToClient(self, client, address):
-#        size = 1024
-#        while True:
-#            try:
-#                data = client.recv(size)
-#                if data:
-#                    # Set the response to echo back the received data
-#                    response = data
-#                    client.send(response)
-#                else:
-#                    raise NameError('{} - Client disconnected'.format(address))
-#            except:
-#                client.close()
-#                return False
-#
-#
-#if __name__ == "__main__":
-#    while True:
-#        # port_num = input("Port? ")
-#        try:
-#            # port_num = int(port_num)  # input() above returns a string
-#            port_num = 5000
-#            break
-#        except ValueError:
-#            pass
-#
-#    ThreadedServer('127.0.0.1', port_num).listen()
+max_con = 500
+auth = 'pass'
+exit_code = '!@'
+exit_code = exit_code.encode()
 
 
-#def clientHandler():
-#    conn, addr = s.accept()
-#    print(addr, "is Connected")
-#    while 1:
-#        data = conn.recv(1024)
-#        if not data:
-#            break
-#        print("Received Message", repr(data))
-def Main():
-    TIMEOUT = 10
-    auth = 'pass'
-    host = '127.0.0.1'
-    port = 5000
-    exit_code = '!@'
-    exit_code = exit_code.encode()
-    s = socket.socket()
-    s.bind((host, port))
-    s.listen(1)
-    authorized = False
-    while 1:
-        c, addr = s.accept()
-        c.settimeout(TIMEOUT)
-        while 1:
+class ThreadedServer(object):
+    def __init__(self, host, port):  # host/port = actual parameters at creation time
+        self.host = host
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind((self.host, self.port))
+
+    def listen(self):
+        self.sock.listen(500)
+        while True:
+            client, address = self.sock.accept()
+            Thread(target = self.listen_to_client, args=(client, address)).start()
+
+#  Handles authentication of the client.
+# Instead of being called each time a client attempts
+#  to authenticate Communicates with the client directly
+    @staticmethod
+    def authenticate_client(code, client, address):
+        print('Executing authentication for ' + address[0] + ', code: ' + code)
+
+        client.settimeout(10)
+        auth_recv = code
+        print(str(address[0]) + '\'s authentication code: ' + auth_recv)
+        while True:
             try:
-                print("Incoming connection from: " + str(addr))
-                data = c.recv(10)  # Receive max of 10 bytes
-                auth_recv = str((data.decode()))
-                print('Checking: ' + auth_recv)
-		
-                if ((str(auth_recv)) == (str(auth))):
+                if auth_recv == auth:
                     print(auth_recv + ' successfully authenticated')
-                    authorized = True
                     print('Exit Code: ' + (str(exit_code)))
+                    client.send(code.encode())
+                    return True
                 else:
-                    c.recv(10)
+                    print('Auth failed, waiting for another auth')
+                    client.send('ERROR'.encode())
+                    auth_recv = client.recv(10)
+                    auth_recv = str(auth_recv.decode())
             except socket.timeout:
-                    if authorized is False:
-                        print ('Connection lost. Listening for a new controller.')
-                        break
-                    else:
-                        #var to check for authentication
-                        #if not then drop connection
-				# if authenticated keep on going
-                        while data != exit_code:  # Exit code
- 
-                            c.send(data)  # ack
-                            data = c.recv(1024)  # Receive max of 10 bytes
-                            c.send(data)  # ack
-                            print("Message: " + data.decode())
-                            if not data:
-                                break
-                            
-			
-    c.close()
+                print('TIMED OUT')
+                return False
+
+    # Receive connection, Authenticate within 10 secs or DROP
+    def listen_to_client(self, client, address): # New connection
+        print("Incoming connection from: " + str(address[0]) + ':' + str(address[1]))
+        data = client.recv(10)  # receive 10-byte authentication code
+        auth_recv = str((data.decode()))
+        authorized = self.authenticate_client(auth_recv, client, address)
+        print('Auth status: ' + str(authorized))
+        while True:
+            if authorized is False:
+                print('Connection timed out/unauthorized')
+                break
+            else:
+                while data != exit_code:  # Exit code
+                    try:
+                        client.send(data)  # ack
+                        data = client.recv(1024)  # Receive max of 10 bytes
+                        print(str(address[0]) + " says: " + data.decode())
+                        # has been r # Authentication = True, drop connection if no data
+                        # has been received for 10 seconds OR exit code is
+                        # entered
+                    except socket.timeout:
+                        print('Client: ' + str(address[0]) + '\'s connection Timed out')
+                        data = exit_code
+                        authorized = False
+
+        client.send(exit_code)
+        # Closing thread
+        client.close()
 
 
-if __name__ == '__main__':
-    Main()
-
-
-
+if __name__ == "__main__":
+    while True:
+        port_num = input("Port? ")  # input() returns a string
+        try:
+            port_num = int(port_num)
+            break
+        except ValueError:
+            pass
+    # Instantiates ThreadedServer obj type listen()
+    ThreadedServer('127.0.0.1', port_num).listen()

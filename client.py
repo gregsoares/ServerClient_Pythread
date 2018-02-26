@@ -1,80 +1,41 @@
-#Author: Greg Soares
-#!/usr/bin/env python
-
-import socket
-import time
-import timeit
-import threading
+from socket import *
+from threading import Thread
 
 
-#def clientHandler():
-#    conn, addr = s.accept()
-#    print(addr, "is Connected")
-#
-#    while 1:
-#        data = conn.recv(1024)
-#        if not data:
-#            break
-#        print("Received Message", repr(data))
 
-def Main():
-    exit_code = '!@'
-    host = '127.0.0.1'
-    port = 5000
-    s = socket.socket()
-    s.connect((host, port))
-    # Initiating connection
-    login = input("Login: ")
-    message = input("Message: ")
-    login = (login.encode())
+class multi_client(object):
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind((self.host, self.port))
+exit_code = '!@'.encode()
+t_error = 'ERROR'.encode()
+port = input("Port: ")
+port = int(port)
+message = ''
+s = socket()
+s.connect(('', port))
+code = input('Auth code: ')
+code = code.encode()
 
-    print("Sending Login")
-    s.send(login)
-    data = s.recv(10)
-    auth_recv = (str(data))
-    login.decode()
-    login = (str(login))
-    # Debugging messages
-    # print('Checking Login')
-    # print(auth_recv + ' : ' + login)
-    # Add a timer to the if statement to disconnect if no auth received
-    if auth_recv == login:  # If we get out auth back then send message
-        print('Sending message')  # Let client know we got auth and message is being sent
-        message = (message.encode())
+s.send(code)
+ack = s.recv(10)
+print('Ack received: ' + (str(ack.decode())))
+
+while (message != exit_code) and (ack != exit_code):
+    if(ack != t_error):
+        print('Authentication Successful.\n')
+        message = (input('Message: ')).encode()
         s.send(message)
-        # message = message.decode()
-        # message = (str(message))
-        keep_alive = True
-        data = s.recv(1024)
-        data = (str(data))
-        message = (str(message))
-        print('Checking: ' + data + '= ' + message)
-        if data == message:
+        ack = s.recv(1024)
+        print('Received: ' + (str(ack.decode())))
+    else:
+        print('NOT AUTHENTICATED')
+        code = (input('Auth code: ')).encode()
+        s.send(code)
+        ack = s.recv(1024)
+        print('Received: ' + (str(ack.decode())))
 
-            print(exit_code)
-            while keep_alive:
-                data = s.recv(1024)
-                print(data)
-                new_message = (input("Send: ")).encode()
-                s.send(new_message)
-                data = s.recv(1024)
-                data = (str(data))
-                new_message = (str(new_message))
-                # Debugging messages
-                # print(data)
-                # print(new_message)
-                if new_message == exit_code:  # Check for exit code and close connection
-                    print('DISCONNECTING')
-                    keep_alive = False
-
-#                if data != new_message:
-#                    print('\t\t-- Message error -- \n Sent: {} \n Received: {} '.format(new_message, data))
-#                    keep_alive = False
-
-    s.close()
-
-
-if __name__ == '__main__':
-    Main()
-
-
+s.close()
