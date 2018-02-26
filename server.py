@@ -31,11 +31,15 @@ class ThreadedServer(object):
     @staticmethod
     def authenticate_client(code, client, address):
         print('Executing authentication for ' + address[0] + ', code: ' + code)
-
+        counter = 0
         client.settimeout(10)
         auth_recv = code
         print(str(address[0]) + '\'s authentication code: ' + auth_recv)
         while True:
+            counter = counter+1
+            if counter == 3:
+                print('Client ' + address[0] + '\'s AUTH ATTEMPT EXCEEDED')
+                return False
             try:
                 if auth_recv == auth:
                     print(auth_recv + ' successfully authenticated')
@@ -71,6 +75,10 @@ class ThreadedServer(object):
                         # has been r # Authentication = True, drop connection if no data
                         # has been received for 10 seconds OR exit code is
                         # entered
+                        if not data:
+                            break
+                            authorized = False
+
                     except socket.timeout:
                         # print('Client: ' + str(address[0]) + '\'s connection Timed out')
                         data = exit_code
