@@ -1,15 +1,20 @@
 from socket import *
 from threading import Thread
-from scapy.all import *
+import time
 
 data_size = 1020  # number of bytes per transmission being sent
 con_num = 10  # number of connections to the host
 counter = 1000  # number of messages to send of size: data_size
+sleep_time = .2
 
-
-def m_client(sock, host, port, data):
-    sock.connect((host, port))
-    sock.send(data)
+def m_client(host, port, data):
+    print('Executing m_client')
+    client = socket()
+    client.connect((host, port))
+    for i in range(counter):
+        client.send(data)
+    client.close()
+    print(' closing connection with ' + str(host))
 
 
 def data_attack(self):
@@ -23,16 +28,12 @@ def all_in(self):
 if __name__ == "__main__":
 #    port = input("Port: ")
 #    port = int(port)
-    port = 7000
+    port = 8000
     host = '127.0.0.1'
     # host = (str(input('Host: ')))
-    message = 'asdddddd'
+    message = 'asddddddsdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'
     message = message.encode()
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     for x in range(10):
-        newn = s.dup()
-        n = Thread(target=m_client, args=(newn, host, port, message),)
-        #ack = s.recv(10)
-        #print('Ack received: ' + (str(ack.decode())))
-
-    s.close()
+        n = Thread(target=m_client(host, port, message),)
+        print('Initiating thread ' + str(x))
+        time.sleep(.2)

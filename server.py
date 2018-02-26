@@ -60,7 +60,7 @@ class ThreadedServer(object):
         print('Auth status: ' + str(authorized))
         while True:
             if authorized is False:
-                print('Connection timed out/unauthorized')
+                print(str(address[0]) + '\'s Connection timed out/unauthorized')
                 break
             else:
                 while data != exit_code:  # Exit code
@@ -72,7 +72,7 @@ class ThreadedServer(object):
                         # has been received for 10 seconds OR exit code is
                         # entered
                     except socket.timeout:
-                        print('Client: ' + str(address[0]) + '\'s connection Timed out')
+                        # print('Client: ' + str(address[0]) + '\'s connection Timed out')
                         data = exit_code
                         authorized = False
 
